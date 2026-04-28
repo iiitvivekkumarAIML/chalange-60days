@@ -1,37 +1,56 @@
-# Day 01 — Python Revision: OOP, Functions & List Comprehensions
+<div align="center">
 
-**Date:** 28/04/2026
-**Phase:** Phase 1 — Python · NumPy · Pandas · EDA
-**Challenge:** 60-Day ML Revision
-**Streak:** 🔥 Day 1 of 60
+# 📓 Day 01 — Python Revision
 
----
+### OOP · Functions · List Comprehensions
 
-## 📌 Topic Revised
+![Day](https://img.shields.io/badge/Day-01%20%2F%2060-blue?style=flat-square)
+![Date](https://img.shields.io/badge/Date-28--Apr--2026-lightgrey?style=flat-square)
+![Phase](https://img.shields.io/badge/Phase-1%20Python%20%26%20EDA-green?style=flat-square)
+![Status](https://img.shields.io/badge/Status-✅%20Complete-brightgreen?style=flat-square)
 
-Python core concepts that form the foundation of every ML/AI project:
-- Object-Oriented Programming (OOP)
-- Functions (regular, lambda, *args/**kwargs)
-- List Comprehensions (and dict/set comprehensions)
+</div>
 
 ---
 
-## 🧠 Key Concepts
+## 📋 Overview
 
-### 1. Object-Oriented Programming (OOP)
+| Field | Details |
+|-------|---------|
+| 📅 Date | 28 April 2026 |
+| 🗂️ Phase | Phase 1 — Python · NumPy · Pandas · EDA |
+| 📌 Topics | OOP, Functions, List Comprehensions |
+| 🏗️ Project | No project — revision day |
+| 🔥 Streak | Day 1 of 60 |
 
-OOP organises code into **classes** and **objects**. In ML, OOP is everywhere — sklearn estimators, PyTorch models, and custom pipelines all use it.
+---
 
-**The 4 Pillars:**
+## 🧠 What I Revised Today
 
-| Pillar | What it means | ML Example |
-|--------|--------------|------------|
+- [Object-Oriented Programming (OOP)](#1-object-oriented-programming-oop)
+- [Functions](#2-functions)
+- [List Comprehensions](#3-list-comprehensions)
+- [Quick Cheatsheet](#-quick-cheatsheet)
+
+---
+
+## 1. Object-Oriented Programming (OOP)
+
+> OOP organises code into **classes** and **objects**.
+> In ML, OOP is everywhere — sklearn estimators, PyTorch `nn.Module`, and custom pipelines all use it.
+
+### The 4 Pillars
+
+| Pillar | Meaning | ML Example |
+|--------|---------|------------|
 | **Encapsulation** | Bundle data + methods inside a class | A `Model` class holding weights + `predict()` |
 | **Inheritance** | Child class reuses parent class logic | `class LinearRegression(BaseEstimator)` |
-| **Polymorphism** | Same method name, different behaviour | `.fit()` works differently for each sklearn model |
+| **Polymorphism** | Same method name, different behaviour | `.fit()` works differently per sklearn model |
 | **Abstraction** | Hide complexity, expose only what's needed | `model.predict(X)` — you don't see the math |
 
-**Core syntax to remember:**
+---
+
+### Core Class Syntax
 
 ```python
 class MLModel:
@@ -40,7 +59,7 @@ class MLModel:
 
     def __init__(self, name, version):
         # Instance variables — unique to each object
-        self.name = name
+        self.name    = name
         self.version = version
         self._weights = None          # _ = protected by convention
 
@@ -48,17 +67,20 @@ class MLModel:
         return f"MLModel(name={self.name}, version={self.version})"
 
     def fit(self, X, y):
-        # Simulate training
         self._weights = [0.0] * X.shape[1]
         print(f"{self.name} trained successfully.")
 
     def predict(self, X):
         if self._weights is None:
-            raise ValueError("Model is not trained yet. Call fit() first.")
+            raise ValueError("Model not trained. Call fit() first.")
         return [sum(row) for row in X]
+```
 
+---
 
-# Inheritance
+### Inheritance
+
+```python
 class DeepModel(MLModel):
     def __init__(self, name, version, layers):
         super().__init__(name, version)   # Call parent __init__
@@ -68,24 +90,27 @@ class DeepModel(MLModel):
         print(f"Model: {self.name} | Layers: {self.layers}")
 
 
-# Usage
 model = DeepModel("NeuralNet", "v1.0", layers=5)
 model.summary()
-print(model)
+# Model: NeuralNet | Layers: 5
 ```
 
-**Key dunder (magic) methods to know:**
+---
+
+### Key Dunder (Magic) Methods
 
 ```python
-__init__      # Constructor — called when object is created
-__repr__      # Official string representation — useful for debugging
-__str__       # Human-readable string (used by print())
-__len__       # Called by len(obj)
-__eq__        # Called by obj1 == obj2
-__call__      # Makes object callable like a function — used in PyTorch nn.Module
+__init__    # Constructor — runs when object is created
+__repr__    # Official string for debugging
+__str__     # Human-readable string used by print()
+__len__     # Called by len(obj)
+__eq__      # Called by obj1 == obj2
+__call__    # Makes object callable — used in PyTorch nn.Module
 ```
 
-**`@property` — getter without calling it like a method:**
+---
+
+### `@property` — Getter Without Parentheses
 
 ```python
 class Dataset:
@@ -96,15 +121,13 @@ class Dataset:
     def shape(self):
         return len(self._data), len(self._data[0])
 
-    @shape.setter
-    def shape(self, value):
-        raise AttributeError("Shape is read-only.")
-
 ds = Dataset([[1, 2], [3, 4], [5, 6]])
-print(ds.shape)   # (3, 2) — no parentheses needed
+print(ds.shape)   # (3, 2) — accessed like an attribute, not a method
 ```
 
-**`@staticmethod` vs `@classmethod`:**
+---
+
+### `@staticmethod` vs `@classmethod`
 
 ```python
 class Preprocessor:
@@ -112,102 +135,85 @@ class Preprocessor:
 
     @staticmethod
     def normalize(x):
-        # No access to class or instance — pure utility function
+        # No access to class or instance — pure utility
         return (x - min(x)) / (max(x) - min(x))
 
     @classmethod
     def get_scaler(cls):
-        # Access to class via cls — not to the instance
+        # Access to class via cls — not the instance
         return cls.scaler
 
 print(Preprocessor.normalize([1, 2, 3, 4, 5]))
-print(Preprocessor.get_scaler())
+print(Preprocessor.get_scaler())   # StandardScaler
+```
+
+> 💡 **Rule of thumb:**
+> - Use `@staticmethod` when the method doesn't need the class or instance at all
+> - Use `@classmethod` when the method needs to read or modify class-level data
+
+---
+
+## 2. Functions
+
+> Functions in Python are **first-class objects** — pass them, return them, store them.
+> This is critical for ML pipelines, callbacks, and decorators.
+
+### `*args` and `**kwargs`
+
+```python
+def log_metrics(*args, **kwargs):
+    print("Scores  :", args)     # tuple of positional args
+    print("Config  :", kwargs)   # dict of keyword args
+
+log_metrics(0.95, 0.87, model="BERT", dataset="IMDB", epochs=3)
+# Scores  : (0.95, 0.87)
+# Config  : {'model': 'BERT', 'dataset': 'IMDB', 'epochs': 3}
 ```
 
 ---
 
-### 2. Functions
-
-Functions in Python are **first-class objects** — you can pass them, return them, and store them like variables. This is critical for ML pipelines and callbacks.
-
-**Regular functions — best practices:**
+### Lambda Functions
 
 ```python
-def train_model(X, y, learning_rate=0.01, epochs=100, verbose=True):
-    """
-    Train a simple gradient descent model.
+square    = lambda x: x ** 2
+relu      = lambda x: max(0, x)
+normalize = lambda x, mn, mx: (x - mn) / (mx - mn)
 
-    Args:
-        X (list): Feature matrix
-        y (list): Target values
-        learning_rate (float): Step size for gradient update
-        epochs (int): Number of training iterations
-        verbose (bool): Print progress if True
-
-    Returns:
-        list: Trained weights
-    """
-    weights = [0.0] * len(X[0])
-    for epoch in range(epochs):
-        # ... training logic
-        if verbose and epoch % 10 == 0:
-            print(f"Epoch {epoch}/{epochs}")
-    return weights
+print(relu(-3))             # 0
+print(relu(2.5))            # 2.5
+print(normalize(5, 0, 10))  # 0.5
 ```
 
-**`*args` and `**kwargs` — flexible inputs:**
+---
 
-```python
-def log_metrics(*args, **kwargs):
-    # *args → positional args as a tuple
-    # **kwargs → keyword args as a dict
-    print("Metrics:", args)
-    print("Config:", kwargs)
-
-log_metrics(0.95, 0.87, model="BERT", dataset="IMDB", epochs=3)
-# Metrics: (0.95, 0.87)
-# Config: {'model': 'BERT', 'dataset': 'IMDB', 'epochs': 3}
-```
-
-**Lambda functions — anonymous, one-line:**
-
-```python
-square      = lambda x: x ** 2
-add         = lambda x, y: x + y
-relu        = lambda x: max(0, x)
-normalize   = lambda x, mn, mx: (x - mn) / (mx - mn)
-
-print(relu(-3))          # 0
-print(normalize(5,0,10)) # 0.5
-```
-
-**Higher-order functions — map, filter, reduce:**
+### Higher-Order Functions — `map`, `filter`, `reduce`
 
 ```python
 from functools import reduce
 
-scores    = [0.72, 0.88, 0.65, 0.91, 0.78]
+scores  = [0.72, 0.88, 0.65, 0.91, 0.78]
 
-# map — apply function to every element
-squared   = list(map(lambda x: round(x**2, 4), scores))
+# map — apply a function to every element
+squared = list(map(lambda x: round(x**2, 4), scores))
+# [0.5184, 0.7744, 0.4225, 0.8281, 0.6084]
 
-# filter — keep elements that pass the condition
-passing   = list(filter(lambda x: x >= 0.75, scores))
+# filter — keep only elements that pass the condition
+passing = list(filter(lambda x: x >= 0.75, scores))
+# [0.88, 0.91, 0.78]
 
-# reduce — collapse list to a single value
-total     = reduce(lambda acc, x: acc + x, scores)
-
-print(squared)   # [0.5184, 0.7744, 0.4225, 0.8281, 0.6084]
-print(passing)   # [0.88, 0.91, 0.78]
-print(total)     # 3.94
+# reduce — collapse the whole list to one value
+total   = reduce(lambda acc, x: acc + x, scores)
+# 3.94
 ```
 
-**Closures — a function that remembers its enclosing scope:**
+---
+
+### Closures
 
 ```python
 def make_multiplier(factor):
     def multiply(x):
-        return x * factor   # 'factor' is remembered even after make_multiplier returns
+        return x * factor   # 'factor' is remembered by the inner function
     return multiply
 
 double = make_multiplier(2)
@@ -217,186 +223,190 @@ print(double(5))   # 10
 print(triple(5))   # 15
 ```
 
-**Decorators — wrap a function to add behaviour (used heavily in FastAPI, PyTorch):**
+---
+
+### Decorators
 
 ```python
 import time
 
 def timer(func):
     def wrapper(*args, **kwargs):
-        start = time.time()
+        start  = time.time()
         result = func(*args, **kwargs)
-        end = time.time()
-        print(f"{func.__name__} took {end - start:.4f}s")
+        print(f"{func.__name__} took {time.time() - start:.4f}s")
         return result
     return wrapper
 
 @timer
 def train(epochs):
-    total = 0
-    for _ in range(epochs):
-        total += 1
-    return total
+    return sum(range(epochs))
 
 train(1_000_000)
-# train took 0.0821s
+# train took 0.0342s
+```
+
+> 💡 Decorators are used heavily in **FastAPI** (`@app.get`), **PyTorch** (`@torch.no_grad()`), and **pytest** (`@pytest.fixture`)
+
+---
+
+## 3. List Comprehensions
+
+> One-liner replacement for `for` loops — faster, cleaner, more Pythonic.
+
+**Syntax:**
+```
+[expression   for item in iterable   if condition]
 ```
 
 ---
 
-### 3. List Comprehensions
-
-List comprehensions replace `for` loops with a clean one-liner. They are faster than loops because they are optimised in CPython.
-
-**Syntax pattern:**
-
-```
-[expression  for item in iterable  if condition]
-```
-
-**Basic examples:**
+### Basic Examples
 
 ```python
-# Regular loop → list comprehension
-squares_loop = []
-for x in range(1, 11):
-    squares_loop.append(x ** 2)
+# Squares of 1 to 10
+squares      = [x ** 2 for x in range(1, 11)]
 
-squares_comp = [x ** 2 for x in range(1, 11)]
-# [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
-
-# With condition — filter even squares only
+# Even squares only
 even_squares = [x ** 2 for x in range(1, 11) if x % 2 == 0]
 # [4, 16, 36, 64, 100]
+
+# Ternary inside comprehension
+labels       = ["pass" if x >= 0.75 else "fail" for x in [0.9, 0.6, 0.8, 0.5]]
+# ['pass', 'fail', 'pass', 'fail']
 ```
 
-**ML-flavoured examples:**
+---
+
+### ML-Flavoured Examples
 
 ```python
-features    = [0.5, -0.3, 1.2, -0.8, 0.9, 0.0]
+features = [0.5, -0.3, 1.2, -0.8, 0.9, 0.0]
 
 # ReLU activation
-relu_out    = [max(0, x) for x in features]
+relu_out   = [max(0, x) for x in features]
 # [0.5, 0, 1.2, 0, 0.9, 0]
 
-# Normalise to 0-1
-mn, mx      = min(features), max(features)
-normalised  = [round((x - mn) / (mx - mn), 4) for x in features]
+# Min-max normalisation
+mn, mx     = min(features), max(features)
+normalised = [round((x - mn) / (mx - mn), 4) for x in features]
 
-# Remove negative values (feature clipping)
-clipped     = [x if x > 0 else 0 for x in features]
-
-# Extract values above a threshold
-high_conf   = [f"Feature {i}" for i, x in enumerate(features) if abs(x) > 0.5]
+# High-confidence feature names
+high_conf  = [f"feature_{i}" for i, x in enumerate(features) if abs(x) > 0.5]
+# ['feature_0', 'feature_2', 'feature_4']
 ```
 
-**Nested list comprehension — flatten a matrix:**
+---
+
+### Nested List Comprehension
 
 ```python
-matrix      = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+matrix     = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
 # Flatten 2D → 1D
-flat        = [val for row in matrix for val in row]
+flat       = [val for row in matrix for val in row]
 # [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-# Transpose a matrix
-transposed  = [[row[i] for row in matrix] for i in range(len(matrix[0]))]
+# Transpose
+transposed = [[row[i] for row in matrix] for i in range(len(matrix[0]))]
 # [[1,4,7], [2,5,8], [3,6,9]]
 ```
 
-**Dict comprehension — very useful for feature mapping:**
+---
+
+### Dict, Set & Generator Comprehensions
 
 ```python
-labels      = ["cat", "dog", "bird", "fish"]
+labels    = ["cat", "dog", "bird", "fish"]
 
-# Create label → index mapping (like a tokeniser vocabulary)
-label2idx   = {label: idx for idx, label in enumerate(labels)}
-idx2label   = {idx: label for label, idx in label2idx.items()}
+# Dict comprehension — label → index (like a tokeniser vocab)
+label2idx = {label: idx for idx, label in enumerate(labels)}
+idx2label = {idx: label for label, idx in label2idx.items()}
+# {'cat': 0, 'dog': 1, 'bird': 2, 'fish': 3}
 
-print(label2idx)   # {'cat': 0, 'dog': 1, 'bird': 2, 'fish': 3}
-print(idx2label)   # {0: 'cat', 1: 'dog', 2: 'bird', 3: 'fish'}
-```
-
-**Set comprehension — unique values only:**
-
-```python
-raw_tags    = ["nlp", "ml", "nlp", "cv", "ml", "ai"]
-unique_tags = {tag for tag in raw_tags}
+# Set comprehension — unique values
+raw_tags   = ["nlp", "ml", "nlp", "cv", "ml", "ai"]
+unique     = {tag for tag in raw_tags}
 # {'nlp', 'ml', 'cv', 'ai'}
+
+# Generator expression — memory efficient, no list in RAM
+total      = sum(x ** 2 for x in range(1_000_000))
 ```
 
-**Generator expression — memory-efficient (no list in memory):**
-
-```python
-# Use () instead of [] → creates a generator, not a list
-# Ideal for large datasets
-
-total = sum(x ** 2 for x in range(1_000_000))   # No list created in memory
-```
+> 💡 Use a **generator** `()` instead of a list `[]` when working with large datasets —
+> it processes one item at a time without loading everything into memory.
 
 ---
 
-## ⚡ Quick Revision Cheatsheet
+## ⚡ Quick Cheatsheet
 
 ```
 OOP
-├── class MyClass:              → define a class
-├── def __init__(self, ...):    → constructor
-├── self.attr = value           → instance variable
-├── @property                   → getter as attribute
-├── @staticmethod               → utility, no self/cls
-├── @classmethod                → access class, no self
-└── super().__init__(...)       → call parent constructor
+├── class MyClass:                  → define a class
+├── def __init__(self, ...):        → constructor
+├── self.attr = value               → instance variable
+├── ClassName.attr = value          → class variable
+├── @property                       → getter as attribute
+├── @staticmethod                   → utility, no self/cls
+├── @classmethod                    → gets cls, not self
+└── super().__init__(...)           → call parent constructor
 
 FUNCTIONS
-├── def func(*args, **kwargs):  → flexible signature
-├── lambda x: expression        → anonymous one-liner
-├── map(fn, iterable)           → apply fn to all
-├── filter(fn, iterable)        → keep where fn is True
-├── reduce(fn, iterable)        → collapse to one value
-└── @decorator                  → wrap a function
+├── def func(*args, **kwargs):      → flexible signature
+├── lambda x: expr                  → anonymous one-liner
+├── map(fn, iterable)               → apply fn to all
+├── filter(fn, iterable)            → keep where fn True
+├── reduce(fn, iterable)            → collapse to 1 value
+└── @decorator                      → wrap a function
 
 LIST COMPREHENSIONS
-├── [expr for x in iterable]              → basic
-├── [expr for x in iterable if cond]      → filtered
-├── [expr if cond else other for x in it] → ternary
-├── [x for row in matrix for x in row]    → flatten
-├── {k: v for k, v in items}              → dict comp
-├── {x for x in iterable}                 → set comp
-└── (x for x in iterable)                 → generator
+├── [expr for x in it]              → basic
+├── [expr for x in it if cond]      → filtered
+├── [a if c else b for x in it]     → ternary
+├── [x for row in mat for x in row] → flatten
+├── {k: v for k, v in pairs}        → dict comp
+├── {x for x in it}                 → set comp
+└── (x for x in it)                 → generator (no list)
 ```
 
 ---
 
 ## 😕 Confusion Point
 
-> Write your honest confusion here each day.
-
-- **Example:** The difference between `@staticmethod` and `@classmethod` — both are called on the class, but `@classmethod` receives `cls` and can modify class state, while `@staticmethod` is a pure utility with no access to class or instance.
-- Multiple inheritance order in Python (MRO — Method Resolution Order) — need to revisit `super()` behaviour in diamond inheritance.
+- `@staticmethod` vs `@classmethod` — both called on the class without an instance, but `@classmethod` receives `cls` and can read/modify class state, while `@staticmethod` is a plain utility function with no awareness of the class.
+- Python MRO (Method Resolution Order) with multiple inheritance — need to look into how `super()` resolves in diamond inheritance patterns.
 
 ---
 
 ## 🏗️ Mini Project
 
-> No project today — Day 1 is concept revision only.
-> Project begins Day 7 with full EDA on a real dataset.
-
-**Tomorrow's project plan:** Begin NumPy arrays and vectorised operations.
+> No project today — Day 01 is pure concept revision.
+> Project work begins **Day 07** with a full EDA on a real-world dataset.
 
 ---
 
-## ✅ Tomorrow's Plan
+## 📅 Tomorrow's Plan
 
-**Day 02 — NumPy:** arrays, broadcasting, vectorisation, reshape, indexing, linear algebra operations.
+**Day 02 — NumPy**
+
+- Arrays, shape, dtype, reshape, slicing
+- Broadcasting rules
+- Vectorised operations vs loops
+- `np.linalg` — dot product, matrix multiply, inverse
+- Random number generation for ML
 
 ---
 
 ## 🔗 LinkedIn Post
 
-- [ ] Posted today
-- Link: *(paste LinkedIn URL here after posting)*
+- [ ] Posted — *(paste link here)*
 
 ---
 
-*Day 01 / 60 complete ✅ — Keep going!*
+<div align="center">
+
+**Day 01 / 60 ✅**
+
+[← Back to Main Tracker](../../README.md)
+
+</div>
