@@ -1,0 +1,526 @@
+<div align="center">
+
+# 📓 Day 02 — NumPy Deep Dive
+
+### Arrays · Broadcasting · Vectorisation · Linear Algebra
+
+![Day](https://img.shields.io/badge/Day-02%20%2F%2060-blue?style=flat-square)
+![Date](https://img.shields.io/badge/Date-29--Apr--2026-lightgrey?style=flat-square)
+![Phase](https://img.shields.io/badge/Phase-1%20Python%20%26%20EDA-green?style=flat-square)
+![Status](https://img.shields.io/badge/Status-✅%20Complete-brightgreen?style=flat-square)
+![Library](https://img.shields.io/badge/NumPy-1.26-013243?style=flat-square&logo=numpy&logoColor=white)
+
+</div>
+
+---
+
+## 📋 Overview
+
+| Field | Details |
+|-------|---------|
+| 📅 Date | 29 April 2026 |
+| 🗂️ Phase | Phase 1 — Python · NumPy · Pandas · EDA |
+| 📌 Topics | Arrays, dtype, shape, reshape, indexing, slicing, broadcasting, vectorisation, `np.linalg`, random |
+| 🏗️ Project | No project — revision day |
+| 🔥 Streak | Day 2 of 60 |
+
+---
+
+## 🧠 What I Revised Today
+
+- [Why NumPy? (vs plain Python)](#why-numpy-vs-plain-python)
+- [Creating arrays](#1-creating-arrays)
+- [Array attributes — shape, dtype, ndim, size](#2-array-attributes)
+- [Indexing and slicing](#3-indexing-and-slicing)
+- [Reshaping and stacking](#4-reshaping-and-stacking)
+- [Vectorised operations (no loops)](#5-vectorised-operations-no-loops)
+- [Broadcasting rules](#6-broadcasting-rules)
+- [Useful aggregate functions](#7-useful-aggregate-functions)
+- [Linear algebra — `np.linalg`](#8-linear-algebra--nplinalg)
+- [Random numbers for ML](#9-random-numbers-for-ml)
+- [Quick Cheatsheet](#-quick-cheatsheet)
+
+---
+
+## Why NumPy? (vs plain Python)
+
+> NumPy arrays store data in **contiguous blocks of memory** with a fixed type (dtype).
+> Python lists store pointers to objects scattered in memory.
+> Result: NumPy is **10–100× faster** for numerical operations — critical for ML.
+
+```python
+import numpy as np
+import time
+
+size = 1_000_000
+
+# Python list — slow loop
+lst  = list(range(size))
+t0   = time.time()
+res  = [x * 2 for x in lst]
+print(f"Python list : {time.time()-t0:.4f}s")   # ~0.12s
+
+# NumPy array — vectorised
+arr  = np.arange(size)
+t0   = time.time()
+res  = arr * 2
+print(f"NumPy array : {time.time()-t0:.4f}s")   # ~0.001s  ← ~100× faster
+```
+
+> 💡 **Rule of thumb:** if you find yourself writing a `for` loop over numbers in ML code,
+> there is almost always a NumPy vectorised equivalent that is cleaner and faster.
+
+---
+
+## 1. Creating Arrays
+
+```python
+import numpy as np
+
+# --- From Python lists ---
+a1 = np.array([1, 2, 3, 4, 5])                       # 1D array
+a2 = np.array([[1, 2, 3], [4, 5, 6]])                 # 2D array (matrix)
+a3 = np.array([[[1,2],[3,4]],[[5,6],[7,8]]])          # 3D array (tensor)
+
+# --- Built-in constructors ---
+zeros   = np.zeros((3, 4))            # 3×4 matrix of 0.0
+ones    = np.ones((2, 3, 4))          # 3D tensor of 1.0
+full    = np.full((3, 3), 7)          # 3×3 filled with 7
+eye     = np.eye(4)                   # 4×4 identity matrix (ML: initialisation)
+empty   = np.empty((2, 2))            # Uninitialised memory — fastest, unread values
+
+# --- Range-based ---
+arange  = np.arange(0, 10, 2)        # [0, 2, 4, 6, 8]  — like Python range()
+linspace= np.linspace(0, 1, 5)       # [0.0, 0.25, 0.5, 0.75, 1.0] — evenly spaced
+
+# --- Specifying dtype ---
+int_arr = np.array([1.9, 2.7, 3.2], dtype=np.int32)   # [1, 2, 3] — truncated
+f16_arr = np.array([1, 2, 3],       dtype=np.float16)  # half-precision (saves GPU RAM)
+bool_arr= np.array([1, 0, 1, 1, 0], dtype=bool)        # [True False True True False]
+```
+
+---
+
+## 2. Array Attributes
+
+```python
+arr = np.array([[1, 2, 3],
+                [4, 5, 6]])
+
+print(arr.shape)     # (2, 3)       — (rows, columns)
+print(arr.ndim)      # 2            — number of dimensions
+print(arr.size)      # 6            — total elements
+print(arr.dtype)     # int64        — data type
+print(arr.nbytes)    # 48           — memory in bytes (6 × 8 bytes for int64)
+print(arr.itemsize)  # 8            — bytes per element
+```
+
+> 💡 In ML: `arr.shape` is the most-used attribute.
+> `(batch_size, seq_len, hidden_dim)` — understanding shape is understanding the model.
+
+---
+
+## 3. Indexing and Slicing
+
+```python
+arr = np.array([[10, 20, 30, 40],
+                [50, 60, 70, 80],
+                [90,100,110,120]])
+
+# --- Basic indexing (0-based) ---
+print(arr[0, 2])          # 30    — row 0, col 2
+print(arr[-1, -1])        # 120   — last row, last col
+
+# --- Slicing  [start:stop:step] ---
+print(arr[:, 0])          # [10 50 90]     — entire first column
+print(arr[0, :])          # [10 20 30 40]  — entire first row
+print(arr[1:3, 1:3])      # [[60 70][100 110]] — sub-matrix
+print(arr[::2, ::2])      # [[10 30][90 110]]  — every other row and col
+
+# --- Boolean (mask) indexing — the ML workhorse ---
+scores = np.array([0.82, 0.45, 0.91, 0.63, 0.88])
+
+mask        = scores > 0.75
+print(mask)               # [True False True False True]
+print(scores[mask])       # [0.82 0.91 0.88]   — values above threshold
+
+# Combine conditions
+high_mid    = scores[(scores > 0.60) & (scores < 0.85)]
+print(high_mid)           # [0.82 0.63]
+
+# --- Fancy (integer array) indexing ---
+idx  = np.array([0, 2, 4])
+print(scores[idx])        # [0.82 0.91 0.88]  — pick specific positions
+```
+
+---
+
+## 4. Reshaping and Stacking
+
+```python
+arr = np.arange(12)       # [ 0  1  2  3  4  5  6  7  8  9 10 11]
+
+# --- reshape — change shape, keep data ---
+mat  = arr.reshape(3, 4)  # 3 rows × 4 cols  (3×4 = 12 ✅)
+cube = arr.reshape(2,2,3) # 2×2×3 tensor    (2×2×3 = 12 ✅)
+
+# -1 means "infer this dimension"
+row  = arr.reshape(1, -1) # (1, 12)  — 1 row,  auto cols
+col  = arr.reshape(-1, 1) # (12, 1)  — auto rows, 1 col  ← used constantly in ML
+
+# --- flatten vs ravel ---
+flat_copy = mat.flatten()   # always returns a copy
+flat_view = mat.ravel()     # returns a view when possible (faster, less memory)
+
+# --- transpose ---
+mat_T = mat.T               # (3,4) → (4,3)
+# Equivalent: np.transpose(mat)
+
+# --- Stacking arrays together ---
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+h = np.hstack([a, b])            # [1 2 3 4 5 6]   — horizontal stack (side by side)
+v = np.vstack([a, b])            # [[1 2 3]          — vertical stack (on top)
+                                 #  [4 5 6]]
+c = np.column_stack([a, b])      # [[1 4]            — each array becomes a column
+                                 #  [2 5]
+                                 #  [3 6]]
+
+# np.concatenate — general purpose
+np.concatenate([a, b], axis=0)   # same as hstack for 1D
+
+# --- Splitting ---
+parts = np.split(np.arange(9), 3)       # [array([0,1,2]), array([3,4,5]), array([6,7,8])]
+rows  = np.vsplit(mat, 3)               # split matrix into 3 row-arrays
+cols  = np.hsplit(mat, 4)               # split matrix into 4 col-arrays
+```
+
+---
+
+## 5. Vectorised Operations (No Loops)
+
+```python
+a = np.array([1.0, 2.0, 3.0, 4.0])
+b = np.array([0.5, 1.5, 2.5, 3.5])
+
+# --- Element-wise arithmetic ---
+print(a + b)     # [1.5 3.5 5.5 7.5]
+print(a - b)     # [0.5 0.5 0.5 0.5]
+print(a * b)     # [0.5 3.0 7.5 14.]
+print(a / b)     # [2.  1.33 1.2  1.14]
+print(a ** 2)    # [1.  4.  9.  16.]
+
+# --- Universal functions (ufuncs) — element-wise, fast ---
+np.sqrt(a)        # [1.  1.41 1.73 2.]
+np.exp(a)         # [2.72 7.39 20.09 54.6]
+np.log(a)         # [0.   0.69 1.10 1.39]
+np.abs(a - 3)     # [2.  1.  0.  1.]
+np.sin(a)         # element-wise sin
+np.clip(a, 1.5, 3.5)  # [1.5 2.  3.  3.5]  — clamp values to range
+
+# --- ML-specific vectorised patterns ---
+# Sigmoid activation
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+# Softmax (over last axis)
+def softmax(x):
+    e = np.exp(x - np.max(x))    # subtract max for numerical stability
+    return e / e.sum()
+
+# MSE loss (no loop)
+y_true = np.array([1.0, 0.0, 1.0, 1.0, 0.0])
+y_pred = np.array([0.9, 0.1, 0.8, 0.7, 0.2])
+mse    = np.mean((y_true - y_pred) ** 2)
+print(f"MSE: {mse:.4f}")          # MSE: 0.0300
+
+# Binary Cross-Entropy loss
+eps = 1e-8   # avoid log(0)
+bce = -np.mean(y_true * np.log(y_pred + eps) + (1 - y_true) * np.log(1 - y_pred + eps))
+print(f"BCE: {bce:.4f}")          # BCE: 0.1643
+```
+
+---
+
+## 6. Broadcasting Rules
+
+> Broadcasting lets NumPy operate on arrays of **different shapes** without copying data.
+> Understanding this removes 80% of shape errors in ML code.
+
+### The 3 Rules
+
+```
+Rule 1: If arrays have different ndim, pad the smaller shape with 1s on the LEFT.
+         (3,) → (1, 3)
+
+Rule 2: Dimensions of size 1 are stretched to match the other array.
+         (1, 3) + (4, 1) → (4, 3)
+
+Rule 3: If sizes differ and neither is 1, NumPy raises a ValueError.
+```
+
+```python
+# --- Rule 1 + 2 in action ---
+a = np.array([[1, 2, 3],    # shape (2, 3)
+              [4, 5, 6]])
+b = np.array([10, 20, 30])  # shape    (3,)  → padded to (1, 3) → stretched to (2, 3)
+
+print(a + b)
+# [[11 22 33]
+#  [14 25 36]]
+
+# --- Column vector broadcast ---
+col = np.array([[100],      # shape (2, 1) → stretched to (2, 3)
+                [200]])
+print(a + col)
+# [[101 102 103]
+#  [204 205 206]]
+
+# --- Outer product via broadcasting ---
+x = np.array([1, 2, 3])       # shape (3,)   → (1, 3)
+y = np.array([10, 20, 30])    # shape (3,)   → (3, 1)
+outer = x.reshape(1,-1) * y.reshape(-1,1)
+print(outer)
+# [[ 10  20  30]
+#  [ 20  40  60]
+#  [ 30  60  90]]
+```
+
+> 💡 **Most common broadcasting in ML:**
+> - Adding bias vector to a batch: `(batch, features) + (features,)`
+> - Normalising: `(X - mean) / std` where mean and std have shape `(features,)`
+> - Distance matrix: `(N, 1, D) - (1, M, D)` → `(N, M, D)`
+
+---
+
+## 7. Useful Aggregate Functions
+
+```python
+arr = np.array([[4, 7, 2, 9],
+                [1, 8, 5, 3]])
+
+# --- Global aggregates ---
+np.sum(arr)         # 39
+np.min(arr)         # 1
+np.max(arr)         # 9
+np.mean(arr)        # 4.875
+np.std(arr)         # 2.59
+np.var(arr)         # 6.73
+np.median(arr)      # 4.5
+np.cumsum(arr)      # running total (flattened)
+
+# --- Along an axis ---
+np.sum(arr, axis=0)   # [5 15  7 12]  — sum down each column
+np.sum(arr, axis=1)   # [22 17]        — sum across each row
+np.mean(arr, axis=0)  # [2.5 7.5 3.5 6.] — column means (feature means in ML)
+np.max(arr, axis=1)   # [9 8]          — max per row
+
+# --- Argmin / Argmax — returns INDEX of min/max ---
+np.argmax(arr, axis=1)  # [3, 1]  — column index of max in each row
+np.argmin(arr, axis=0)  # [1, 0, 0, 1] — row index of min in each column
+
+# --- Sorting ---
+np.sort(arr, axis=1)    # sort each row ascending
+np.argsort(arr[0])      # [2, 0, 1, 3] — indices that would sort first row
+
+# --- Where — conditional element selection ---
+scores = np.array([0.82, 0.45, 0.91, 0.63, 0.88])
+labels = np.where(scores > 0.75, "pass", "fail")
+# ['pass' 'fail' 'pass' 'fail' 'pass']
+
+# --- Unique values ---
+classes = np.array([0, 1, 2, 1, 0, 2, 2, 1])
+np.unique(classes)                  # [0 1 2]
+np.unique(classes, return_counts=True)  # ([0,1,2], [2,3,3])  — class distribution
+```
+
+---
+
+## 8. Linear Algebra — `np.linalg`
+
+> Linear algebra is the language of ML — weights, activations, covariance, and PCA are all matrix operations.
+
+```python
+# --- Dot product and matrix multiply ---
+a = np.array([[1, 2], [3, 4]])   # (2,2)
+b = np.array([[5, 6], [7, 8]])   # (2,2)
+
+dot  = np.dot(a, b)              # matrix multiply: [[19 22][43 50]]
+matmul = a @ b                   # same as np.dot for 2D — preferred syntax
+print(a @ b)
+
+# Dot product of two vectors
+u = np.array([1, 2, 3])
+v = np.array([4, 5, 6])
+print(np.dot(u, v))              # 32   (= 1×4 + 2×5 + 3×6)
+
+# --- Matrix properties ---
+A = np.array([[3., 1.],
+              [1., 2.]])
+
+det  = np.linalg.det(A)          # 5.0   — determinant
+inv  = np.linalg.inv(A)          # inverse: A @ inv(A) = I
+rank = np.linalg.matrix_rank(A)  # 2     — full rank
+tr   = np.trace(A)               # 5.0   — sum of diagonal
+
+# --- Eigenvalues and Eigenvectors (PCA core operation) ---
+eigenvalues, eigenvectors = np.linalg.eig(A)
+print("Eigenvalues :", eigenvalues)    # [3.73, 1.27]
+print("Eigenvectors:\n", eigenvectors) # columns are eigenvectors
+
+# --- Norms ---
+x = np.array([3., 4.])
+np.linalg.norm(x)          # 5.0     — L2 (Euclidean) norm
+np.linalg.norm(x, ord=1)   # 7.0     — L1 norm (sum of abs values)
+np.linalg.norm(x, ord=np.inf)  # 4.0 — max norm
+
+# --- Solving a linear system  Ax = b ---
+A = np.array([[2., 1.], [5., 7.]])
+b = np.array([11., 13.])
+x = np.linalg.solve(A, b)         # faster than np.dot(np.linalg.inv(A), b)
+print(x)                           # [7.11, -3.22]
+
+# --- SVD — used in dimensionality reduction ---
+U, S, Vt = np.linalg.svd(A)
+# A ≈ U @ np.diag(S) @ Vt
+```
+
+---
+
+## 9. Random Numbers for ML
+
+```python
+rng = np.random.default_rng(seed=42)   # ← always set a seed for reproducibility
+
+# --- Distributions ---
+uniform   = rng.uniform(0, 1, size=(3, 4))     # U[0, 1]
+normal    = rng.normal(0, 1, size=(100, 10))   # N(0, 1) — standard normal
+integers  = rng.integers(0, 10, size=(5,))     # random ints in [0, 10)
+binomial  = rng.binomial(n=1, p=0.5, size=100) # coin flips
+
+# --- Weight initialisation strategies (used in neural nets) ---
+n_in, n_out = 784, 256
+
+# Xavier / Glorot init — for sigmoid / tanh layers
+limit = np.sqrt(6 / (n_in + n_out))
+xavier_w = rng.uniform(-limit, limit, size=(n_in, n_out))
+
+# He init — for ReLU layers
+he_w = rng.normal(0, np.sqrt(2 / n_in), size=(n_in, n_out))
+
+# --- Shuffling and sampling ---
+data = np.arange(100)
+rng.shuffle(data)                          # in-place shuffle (for train/test splits)
+
+sample = rng.choice(data, size=10, replace=False)   # random sample without replacement
+
+# --- Reproducibility pattern for ML projects ---
+SEED = 42
+np.random.seed(SEED)                 # legacy API
+rng  = np.random.default_rng(SEED)  # modern API — preferred
+```
+
+---
+
+## ⚡ Quick Cheatsheet
+
+```
+CREATING
+├── np.array([...])          → from list
+├── np.zeros((r,c))          → zeros matrix
+├── np.ones((r,c))           → ones matrix
+├── np.eye(n)                → identity matrix
+├── np.arange(s,e,step)      → range array
+└── np.linspace(s,e,n)       → evenly spaced n points
+
+ATTRIBUTES
+├── .shape   → (rows, cols, ...)
+├── .ndim    → number of axes
+├── .size    → total elements
+├── .dtype   → data type
+└── .T       → transpose
+
+RESHAPING
+├── .reshape(r, c)           → new shape (copies or view)
+├── .reshape(-1, 1)          → column vector (used in ML always)
+├── .flatten()               → always a copy
+├── .ravel()                 → view when possible
+├── np.hstack([a,b])         → join side by side
+└── np.vstack([a,b])         → join top to bottom
+
+INDEXING
+├── arr[row, col]            → single element
+├── arr[:, col]              → full column
+├── arr[row, :]              → full row
+├── arr[arr > 0.5]           → boolean mask
+└── arr[np.array([0,2,4])]   → fancy indexing
+
+MATHS
+├── arr + / - / * / /        → element-wise
+├── arr @ arr2               → matrix multiply
+├── np.dot(a, b)             → dot product / matmul
+├── np.exp / log / sqrt      → element-wise ufuncs
+└── np.clip(arr, lo, hi)     → clamp values
+
+AGGREGATES
+├── np.sum(arr, axis=0)      → sum along axis
+├── np.mean / std / var      → statistics
+├── np.argmax / argmin       → index of max/min
+├── np.where(cond, x, y)     → conditional select
+└── np.unique(arr)           → unique values + counts
+
+LINALG
+├── A @ B                    → matrix multiply
+├── np.linalg.inv(A)         → inverse
+├── np.linalg.det(A)         → determinant
+├── np.linalg.eig(A)         → eigenvalues + vectors
+├── np.linalg.norm(x)        → L2 norm
+├── np.linalg.solve(A, b)    → solve Ax = b
+└── np.linalg.svd(A)         → singular value decomp
+```
+
+---
+
+## 😕 Confusion Point
+
+- **View vs Copy:** `arr[0:2]` returns a **view** (changes affect original). `arr[[0,1]]` (fancy index) returns a **copy**. Forgetting this causes silent bugs — always use `.copy()` when you want an independent array.
+- **`axis=0` vs `axis=1`:** `axis=0` collapses rows (operates down columns). `axis=1` collapses columns (operates across rows). Still needs a moment to think every time.
+- **`np.dot` vs `@` vs `np.matmul`:** For 2D arrays all three are the same. For 3D+, `@` and `np.matmul` broadcast over batch dimensions. `np.dot` does not batch — avoid for tensors.
+
+---
+
+## 🏗️ Mini Project
+
+> No project today — Day 02 is revision only.
+> First project begins **Day 07** — EDA on a real-world dataset using NumPy + Pandas together.
+
+---
+
+## 📅 Tomorrow's Plan
+
+**Day 03 — Pandas**
+
+- `DataFrame` and `Series` creation
+- `read_csv`, `head`, `info`, `describe`
+- Indexing — `.loc`, `.iloc`
+- `groupby`, `merge`, `pivot_table`
+- Handling missing values — `isna`, `fillna`, `dropna`
+- Feature engineering with Pandas
+
+---
+
+## 🔗 LinkedIn Post
+
+- [ ] Posted today
+- Link: *(paste LinkedIn URL here after posting)*
+
+---
+
+<div align="center">
+
+**Day 02 / 60 ✅**
+
+[← Day 01](../Day-01/notes.md) &nbsp;|&nbsp; [↑ Main Tracker](../../README.md) &nbsp;|&nbsp; [Day 03 →](../Day-03/notes.md)
+
+</div>
